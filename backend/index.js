@@ -14,4 +14,4 @@ app.use('/api/farmer', require('./routes/farmer'));
 app.use('/api/admin', require('./routes/admin'));         
 
 const PORT = 5000;
-app.listen(PORT, () => console.log(`AgriTradeChain server executing on port ${PORT}`));
+app.listen(PORT, () => console.log(`agritradechain server executing on port ${PORT}`));

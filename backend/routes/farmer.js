@@ -70,13 +70,32 @@ router.delete('/items/remove/:id', async (req, res) => {
         res.json({ message: 'Crop listing deleted successfully!' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
+// VIEW ALL LISTINGS (For Admin Dashboard)
+// VIEW ALL LISTINGS (Admin Dashboard)
+router.get('/items/all', async (req, res) => {
+    try {
+        const listings = await Listing.find().sort({ _id: -1 });
 
-// 6. VIEW OWN LISTINGS (For Dashboard)
+        res.status(200).json(listings);
+    } catch (err) {
+        console.error("Admin listings fetch error:", err);
+        res.status(500).json({
+            message: "Failed to fetch marketplace listings",
+            error: err.message
+        });
+    }
+});
+// VIEW OWN LISTINGS (For Farmer Dashboard)
 router.get('/items/:farmerId', async (req, res) => {
     try {
-        const myItems = await Listing.find({ farmer: req.params.farmerId });
+        const myItems = await Listing.find({
+            farmer: req.params.farmerId
+        });
+
         res.json(myItems);
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 module.exports = router;

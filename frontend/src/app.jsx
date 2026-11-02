@@ -1,32 +1,42 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
 import CustomerDash from './pages/CustomerDash';
 import FarmerDash from './pages/FarmerDash';
-import AdminDash from './pages/AdminDash'; // 👈 Added the admin import
+import AdminDash from './pages/AdminDash';
+
+import Login from './pages/login';
+import Register from './pages/register';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  const [view, setView] = useState('customer');
-
   return (
-    <div>
-      {/* Navigation Top Bar Toggle */}
-      <nav style={{ padding: '15px', background: '#222', color: 'white', display: 'flex', gap: '15px', alignItems: 'center' }}>
-        <span style={{ fontWeight: 'bold', marginRight: '10px' }}>AgriTradeChain Role View Selector:</span>
-        <button onClick={() => setView('customer')} style={{ background: view === 'customer' ? '#4CAF50' : '#444', color: 'white', border: 'none', padding: '8px 16px', cursor: 'pointer', borderRadius: '4px' }}>
-          Customer Dashboard
-        </button>
-        <button onClick={() => setView('farmer')} style={{ background: view === 'farmer' ? '#4CAF50' : '#444', color: 'white', border: 'none', padding: '8px 16px', cursor: 'pointer', borderRadius: '4px' }}>
-          Farmer Dashboard
-        </button>
-        <button onClick={() => setView('admin')} style={{ background: view === 'admin' ? '#008CBA' : '#444', color: 'white', border: 'none', padding: '8px 16px', cursor: 'pointer', borderRadius: '4px' }}>
-          Admin Dashboard Panel
-        </button>
-      </nav>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
 
-      {/* Render selected workspace views dynamically */}
-      {view === 'customer' && <CustomerDash />}
-      {view === 'farmer' && <FarmerDash />}
-      {view === 'admin' && <AdminDash />}
-    </div>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        <Route path="/customer/dashboard" element={
+          <ProtectedRoute role="Customer">
+            <CustomerDash />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/farmer/dashboard" element={
+          <ProtectedRoute role="Farmer">
+            <FarmerDash />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/dashboard" element={
+          <ProtectedRoute role="Admin">
+            <AdminDash />
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
