@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
@@ -63,8 +62,9 @@ router.get('/dashboard', async (req, res) => {
         const activeMarketplaceItems =
             await Listing.countDocuments({ status: 'Available' });
 
+        // Order schema uses Delivered, not Completed
         const blockchainSettlements =
-            await Order.countDocuments({ status: 'Completed' });
+            await Order.countDocuments({ status: 'Delivered' });
 
         res.json({
             totalCustomers,
@@ -87,6 +87,7 @@ router.get('/farmers', async (req, res) => {
             .sort({ createdAt: -1 });
 
         res.status(200).json(farmers);
+
     } catch (err) {
         console.error('Error fetching farmers:', err.message);
         res.status(500).json({
@@ -94,5 +95,49 @@ router.get('/farmers', async (req, res) => {
         });
     }
 });
+
+// GET ALL REGISTERED CUSTOMERS
+router.get('/customers', async (req, res) => {
+    try {
+        const customers = await Customer.find()
+            .select('-password')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(customers);
+
+    } catch (err) {
+        console.error('Error fetching customers:', err.message);
+        res.status(500).json({
+            message: 'Unable to fetch customers'
+        });
+    }
+});
+
+// GET ALL ORDERS
+
+router.get('/orders', async (req, res) => {
+    try {
+        const orders = await Order.find()
+            .populate('customer', 'name email walletAddress')
+            .populate({
+                path: 'farmer',
+                match: { role: 'Farmer' },
+                select: 'name email walletAddress role'
+            })
+            .populate('item')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(orders);
+
+    } catch (err) {
+        console.error('Error fetching orders:', err);
+
+        res.status(500).json({
+            message: 'Unable to fetch orders',
+            error: err.message
+        });
+    }
+});
+
 
 module.exports = router;

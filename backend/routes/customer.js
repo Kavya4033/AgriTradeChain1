@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 
 const Customer = require('../models/customer');
 const Listing = require('../models/listing');
+const Order = require('../models/order');
 
 // CUSTOMER REGISTER
 router.post('/register', async (req, res) => {
@@ -43,6 +44,7 @@ router.post('/register', async (req, res) => {
         });
 
     } catch (err) {
+        console.error('Customer registration error:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -51,6 +53,12 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                message: 'Email and password are required'
+            });
+        }
 
         const customer = await Customer.findOne({
             email: email.toLowerCase()
@@ -80,6 +88,7 @@ router.post('/login', async (req, res) => {
         });
 
     } catch (err) {
+        console.error('Customer login error:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -94,6 +103,7 @@ router.get('/listings', async (req, res) => {
         res.json(listings);
 
     } catch (err) {
+        console.error('Fetch listings error:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -103,36 +113,100 @@ router.post('/order', async (req, res) => {
     try {
         const { customerId, itemId, transactionHash } = req.body;
 
-        await Listing.findByIdAndUpdate(
-            itemId,
-            { status: 'Sold' }
+        if (!customerId || !itemId || !transactionHash) {
+            return res.status(400).json({
+                message: 'Customer ID, Item ID and Transaction Hash are required'
+            });
+        }
+
+        const customer = await Customer.findById(customerId);
+
+        if (!customer) {
+            return res.status(404).json({
+                message: 'Customer not found'
+            });
+        }
+
+        // Only one request can purchase an available listing.
+        const listing = await Listing.findOneAndUpdate(
+            {
+                _id: itemId,
+                status: 'Available'
+            },
+            {
+                $set: { status: 'Sold' }
+            },
+            {
+                new: true
+            }
         );
 
-        res.status(201).json({
-            message: 'Order logged successfully!',
-            order: {
-                customerId,
-                itemId,
+        if (!listing) {
+            return res.status(400).json({
+                message: 'Listing is unavailable or already sold'
+            });
+        }
+
+        try {
+            const newOrder = new Order({
+                customer: customer._id,
+                item: listing._id,
+                farmer: listing.farmer,
                 transactionHash,
-                status: 'Completed'
-            }
-        });
+                status: 'Delivered'
+            });
+
+            await newOrder.save();
+
+            const savedOrder = await Order.findById(newOrder._id)
+                .populate('customer', 'name email walletAddress')
+                .populate('farmer', 'name email walletAddress')
+                .populate('item');
+
+            return res.status(201).json({
+                message: 'Order logged successfully!',
+                order: savedOrder
+            });
+
+        } catch (orderError) {
+            // Restore listing if order creation fails.
+            await Listing.findOneAndUpdate(
+                {
+                    _id: listing._id,
+                    status: 'Sold'
+                },
+                {
+                    $set: { status: 'Available' }
+                }
+            );
+
+            throw orderError;
+        }
 
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Create order error:', err);
+        res.status(500).json({
+            message: 'Failed to create order',
+            error: err.message
+        });
     }
 });
 
-// VIEW ORDERS
+// VIEW CUSTOMER ORDERS
 router.get('/orders/:customerId', async (req, res) => {
     try {
-        const completedOrders = await Listing.find({
-            status: 'Sold'
-        });
+        const completedOrders = await Order.find({
+            customer: req.params.customerId
+        })
+            .populate('customer', 'name email')
+            .populate('farmer', 'name email walletAddress')
+            .populate('item')
+            .sort({ createdAt: -1 });
 
         res.json(completedOrders);
 
     } catch (err) {
+        console.error('Fetch customer orders error:', err);
         res.status(500).json({ error: err.message });
     }
 });
