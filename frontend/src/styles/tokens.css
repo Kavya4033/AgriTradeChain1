@@ -1,0 +1,167 @@
+/* ==========================================================================
+   AgriTradeChain Design Tokens & CSS Variables
+   ========================================================================== */
+
+:root {
+  /* Surface and Background */
+  --bg: #f5f7f5;
+  --surface: #ffffff;
+  --surface-2: #edf1ed;
+  --line: #dbe2db;
+
+  /* Typography / Inks (tested > 4.5:1 contrast against --bg & --surface) */
+  --ink: #111a13;
+  --ink-2: #38493b;
+  --ink-3: #586b5b;
+  --ink-inverse: #ffffff;
+
+  /* Brand and Accent */
+  --brand: #1b6e2d;
+  --brand-hover: #155724;
+  --brand-contrast: #ffffff;
+  --brand-subtle: #e8f5ea;
+  --accent: #b45309;
+  --accent-contrast: #ffffff;
+
+  /* Semantic Status Pairs (Icon-first status language) */
+  --safe: #1d4ed8;
+  --safe-bg: #eff6ff;
+  --go: #b45309;
+  --go-bg: #fef3c7;
+  --done: #15803d;
+  --done-bg: #ecfdf5;
+  --wait: #526354;
+  --wait-bg: #eef2ee;
+
+  /* Functional Alert Pair */
+  --alert: #dc2626;
+  --alert-bg: #fef2f2;
+
+  /* Radii & Shadows */
+  --radius-card: 18px;
+  --radius-control: 12px;
+  --radius-pill: 9999px;
+  --shadow: 0 4px 20px -2px rgba(17, 26, 19, 0.05), 0 2px 6px -1px rgba(17, 26, 19, 0.03);
+
+  /* Typography */
+  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Focus ring */
+  --focus-ring: 3px solid var(--accent);
+}
+
+/* Dark Mode 1: Operating System Dark Mode (unless explicitly light) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c140d;
+    --surface: #142016;
+    --surface-2: #1b2c1f;
+    --line: #263a2a;
+
+    --ink: #f2f6f3;
+    --ink-2: #c4d1c6;
+    --ink-3: #95a797;
+    --ink-inverse: #0c140d;
+
+    --brand: #22c55e;
+    --brand-hover: #16a34a;
+    --brand-contrast: #07170a;
+    --brand-subtle: rgba(34, 197, 94, 0.16);
+    --accent: #f59e0b;
+    --accent-contrast: #1c1303;
+
+    --safe: #60a5fa;
+    --safe-bg: rgba(37, 99, 235, 0.2);
+    --go: #fbbf24;
+    --go-bg: rgba(217, 119, 6, 0.2);
+    --done: #4ade80;
+    --done-bg: rgba(34, 197, 94, 0.2);
+    --wait: #94a3b8;
+    --wait-bg: rgba(148, 163, 184, 0.18);
+
+    --alert: #f87171;
+    --alert-bg: rgba(239, 68, 68, 0.2);
+
+    --shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -1px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* Dark Mode 2: Explicit User Choice via data-theme="dark" */
+:root[data-theme="dark"] {
+  --bg: #0c140d;
+  --surface: #142016;
+  --surface-2: #1b2c1f;
+  --line: #263a2a;
+
+  --ink: #f2f6f3;
+  --ink-2: #c4d1c6;
+  --ink-3: #95a797;
+  --ink-inverse: #0c140d;
+
+  --brand: #22c55e;
+  --brand-hover: #16a34a;
+  --brand-contrast: #07170a;
+  --brand-subtle: rgba(34, 197, 94, 0.16);
+  --accent: #f59e0b;
+  --accent-contrast: #1c1303;
+
+  --safe: #60a5fa;
+  --safe-bg: rgba(37, 99, 235, 0.2);
+  --go: #fbbf24;
+  --go-bg: rgba(217, 119, 6, 0.2);
+  --done: #4ade80;
+  --done-bg: rgba(34, 197, 94, 0.2);
+  --wait: #94a3b8;
+  --wait-bg: rgba(148, 163, 184, 0.18);
+
+  --alert: #f87171;
+  --alert-bg: rgba(239, 68, 68, 0.2);
+
+  --shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -1px rgba(0, 0, 0, 0.25);
+}
+
+/* Baseline Typography & Reset */
+html {
+  font-size: clamp(17px, 0.95rem + 0.25vw, 19px);
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Tabular numbers for all financial & metric numbers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 1801px) {
+  .app-container {
+    max-width: 1600px !important;
+  }
+}
+
+/* Accessible Focus Visible */
+*:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
