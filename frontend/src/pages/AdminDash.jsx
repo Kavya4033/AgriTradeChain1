@@ -7,6 +7,8 @@ const AdminDash = () => {
         activeMarketplaceItems: 0,
         blockchainSettlements: 0
     });
+    const [farmers, setFarmers] = useState([]);
+    const [farmersLoading, setFarmersLoading] = useState(true);
 
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -16,6 +18,7 @@ const AdminDash = () => {
     useEffect(() => {
         fetchAdminStats();
         fetchAllListings();
+        fetchAllFarmers();
     }, []);
 
     const fetchAdminStats = async () => {
@@ -54,6 +57,25 @@ const AdminDash = () => {
             setError(err.message);
         } finally {
             setListingsLoading(false);
+        }
+    };
+    const fetchAllFarmers = async () => {
+        try {
+            setFarmersLoading(true);
+
+            const res = await fetch('http://localhost:5000/api/admin/farmers');
+
+            if (!res.ok) {
+                throw new Error('Failed to fetch farmers');
+            }
+
+            const data = await res.json();
+            setFarmers(Array.isArray(data) ? data : []);
+
+        } catch (err) {
+            console.error('Error fetching farmers:', err);
+        } finally {
+            setFarmersLoading(false);
         }
     };
 
