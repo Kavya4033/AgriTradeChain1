@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import Navbar from '../components/layout/Navbar';
@@ -7,12 +7,11 @@ import Panel from '../components/layout/Panel';
 import Modal from '../components/common/Modal';
 import TxHashBadge from '../components/common/TxHashBadge';
 import EmptyState from '../components/common/EmptyState';
-import StatusBadge from '../components/StatusBadge';
+import CropCard from '../components/common/CropCard';
 import { SkeletonCard } from '../components/common/SkeletonLoader';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { connectWallet, isMetaMaskInstalled, getAgriContract } from '../utils/web3';
-import { getCropEmoji } from '../utils/statusMap';
 import { API_BASE } from '../config';
 
 const CROP_CATEGORIES = ['All', 'Wheat', 'Rice', 'Corn', 'Barley', 'Soybean', 'Cotton', 'Vegetables', 'Fruits'];
@@ -237,81 +236,21 @@ const Marketplace = () => {
                             }}
                         />
                     ) : (
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                            gap: '24px'
-                        }}>
+                        <div className="marketplace-crop-grid">
                             {listings.map(crop => (
-                                <Panel key={crop._id} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                                    <div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                                            <StatusBadge status="Available" />
-                                            <div style={{ textAlign: 'right' }}>
-                                                <span className="tabular-nums" style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--ink)' }}>
-                                                    {crop.priceInEth} ETH
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '12px' }}>
-                                            <div style={{
-                                                width: '54px',
-                                                height: '54px',
-                                                borderRadius: 'var(--radius-control)',
-                                                background: 'var(--surface-2)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                fontSize: '1.8rem',
-                                                flexShrink: 0
-                                            }}>
-                                                {getCropEmoji(crop.cropType)}
-                                            </div>
-                                            <div>
-                                                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--ink)' }}>
-                                                    {crop.cropType}
-                                                </h3>
-                                                <p style={{ color: 'var(--ink-2)', fontSize: '0.95rem' }}>
-                                                    {crop.quantity} kg available
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Farmer details */}
-                                        <div style={{
-                                            fontSize: '0.9rem',
-                                            color: 'var(--ink-3)',
-                                            borderTop: '1px solid var(--line)',
-                                            paddingTop: '12px',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '4px'
-                                        }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <span>Farmer:</span>
-                                                <strong style={{ color: 'var(--ink)' }}>{crop.farmer?.name || 'Local Producer'}</strong>
-                                            </div>
-                                            {crop.farmer?.location && (
-                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span>Location:</span>
-                                                    <span>{crop.farmer.location}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div style={{ marginTop: '20px' }}>
+                                <CropCard
+                                    key={crop._id}
+                                    crop={crop}
+                                    action={(
                                         <button
                                             type="button"
                                             className="btn-primary"
                                             onClick={() => handleOpenCheckout(crop)}
-                                            style={{ width: '100%' }}
                                         >
                                             🔒 Purchase via escrow
                                         </button>
-                                    </div>
-                                </Panel>
+                                    )}
+                                />
                             ))}
                         </div>
                     )}

@@ -33,26 +33,34 @@ export const STATUS_MAP = {
     },
     // Active crop listing ready for sale
     Available: {
-        icon: '⏳',
-        label: 'Ready',
+        icon: '🌾',
+        label: 'Available',
         plainText: 'Crops for sale',
         step: 0,
-        colorVar: 'var(--wait)',
-        bgVar: 'var(--wait-bg)'
+        colorVar: 'var(--safe)',
+        bgVar: 'var(--safe-bg)'
     },
     // Crop listing sold
     Sold: {
-        icon: '🔒',
+        icon: '📦',
         label: 'Sold',
-        plainText: 'Purchased in escrow',
+        plainText: 'Listing sold',
         step: 1,
-        colorVar: 'var(--safe)',
-        bgVar: 'var(--safe-bg)'
+        colorVar: 'var(--alert)',
+        bgVar: 'var(--alert-bg)'
+    },
+    Unspecified: {
+        icon: '⏳',
+        label: 'No status',
+        plainText: 'Status not provided',
+        step: 0,
+        colorVar: 'var(--wait)',
+        bgVar: 'var(--wait-bg)'
     }
 };
 
 export const getStatusInfo = (status) => {
-    if (!status) return STATUS_MAP.Available;
+    if (!status) return STATUS_MAP.Unspecified;
     const normalized = String(status).trim();
     if (STATUS_MAP[normalized]) {
         return STATUS_MAP[normalized];
@@ -70,7 +78,7 @@ export const getStatusInfo = (status) => {
     if (lower.includes('sold')) {
         return STATUS_MAP.Sold;
     }
-    return STATUS_MAP.Available;
+    return STATUS_MAP.Unspecified;
 };
 
 // Crop emoji helper

@@ -1,5 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
+import Navbar from '../components/layout/Navbar';
+import Container from '../components/layout/Container';
+import DashboardLayout from '../components/layout/DashboardLayout';
+import Panel from '../components/layout/Panel';
+import StatusBadge, { StepTracker } from '../components/StatusBadge';
+import { getStatusInfo } from '../utils/statusMap';
+import DataTable from '../components/common/DataTable';
+import Tabs from '../components/common/Tabs';
+import EmptyState from '../components/common/EmptyState';
+import CropCard from '../components/common/CropCard';
+import AddressChip from '../components/common/AddressChip';
+import TxHashBadge from '../components/common/TxHashBadge';
+import { useAuth } from '../context/AuthContext';
+
+const CROP_CATEGORIES = ['All', 'Wheat', 'Rice', 'Corn', 'Barley', 'Soybean', 'Cotton', 'Vegetables', 'Fruits'];
 
 const CustomerDash = () => {
     const [customerId, setCustomerId] = useState('65f123456789abcdef012345'); // Dummy ID till login integration
@@ -8,6 +23,12 @@ const CustomerDash = () => {
     const [orders, setOrders] = useState([]);
     const [profile, setProfile] = useState({ name: 'John Doe', email: 'john@example.com' });
     const [isEditing, setIsEditing] = useState(false);
+    const [activeTab, setActiveTab] = useState('orders');
+    const [searchText, setSearchText] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [appliedSearch, setAppliedSearch] = useState('');
+    const [appliedCategory, setAppliedCategory] = useState('All');
+    const { user } = useAuth();
 
     // Smart Contract Config (Matches local Hardhat environment configurations)
     const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
@@ -117,76 +138,254 @@ const CustomerDash = () => {
         }
     };
 
+    const handleApplyFilters = (event) => {
+        event.preventDefault();
+        setAppliedSearch(searchText.trim().toLowerCase());
+        setAppliedCategory(selectedCategory);
+    };
+
+    const filteredListings = listings.filter((item) => {
+        const matchesSearch = !appliedSearch || item.cropType?.toLowerCase().includes(appliedSearch);
+        const matchesCategory = appliedCategory === 'All' || item.cropType?.toLowerCase().includes(appliedCategory.toLowerCase());
+        return matchesSearch && matchesCategory;
+    });
+
+    const tabs = [
+        { id: 'orders', icon: '📦', label: 'My Orders & Escrow', count: orders.length },
+        { id: 'browse', icon: '🌽', label: 'Browse Crops', count: listings.length },
+        { id: 'queue', icon: '🛒', label: 'Queue', count: cart.length },
+        { id: 'profile', icon: '👤', label: 'Profile' }
+    ];
+
+    const customerName = user?.name || user?.email?.split('@')[0];
+
     return (
-        <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-            <h1>AgriTradeChain Customer Portal</h1>
-            <hr />
+        <>
+            <Navbar />
+            <main className="customer-dashboard-page">
+                <Container>
+                    <div className="customer-dashboard">
+                        <header className="customer-dashboard-heading">
+                            <div>
+                                <span className="customer-portal-label">🛒 Buyer Portal</span>
+                                <h1>{customerName ? `Welcome back, ${customerName}` : 'Customer Portal'}</h1>
+                                <p>Manage your escrow orders, track delivery, and browse farm listings.</p>
+                            </div>
+                        </header>
 
-            {/* Profile Section */}
-            <section style={{ marginBottom: '30px' }}>
-                <h2>3. Update Profile</h2>
-                {!isEditing ? (
-                    <div>
-                        <p><strong>Name:</strong> {profile.name}</p>
-                        <p><strong>Email:</strong> {profile.email}</p>
-                        <button onClick={() => setIsEditing(true)}>Edit Profile</button>
+                        <Tabs
+                            items={tabs}
+                            value={activeTab}
+                            onChange={setActiveTab}
+                            ariaLabel="Customer portal sections"
+                        />
+
+                        <DashboardLayout
+                            main={(
+                                <>
+                                    {activeTab === 'orders' && (
+                                        <Panel
+                                            title={`Escrow Order Ledger (${orders.length})`}
+                                            action={(
+                                                <button type="button" className="btn-secondary" onClick={fetchOrders}>
+                                                    Refresh Orders
+                                                </button>
+                                            )}
+                                        >
+                                            {orders.length === 0 ? (
+                                                <EmptyState
+                                                    icon="📦"
+                                                    title="No orders returned"
+                                                    description="Orders returned for this customer will appear in the escrow ledger."
+                                                    actionLabel="Browse harvest listings"
+                                                    onAction={() => setActiveTab('browse')}
+                                                />
+                                            ) : (
+                                                <DataTable
+                                                    rows={orders}
+                                                    minWidth="64rem"
+                                                    caption="Customer orders and escrow status"
+                                                    columns={[
+                                                        {
+                                                            key: '_id',
+                                                            label: 'Order & Date',
+                                                            render: (value, order) => (
+                                                                <div className="customer-order-id">
+                                                                    <strong>#{String(value).slice(-6)}</strong>
+                                                                    <span>{formatDate(order.createdAt)}</span>
+                                                                </div>
+                                                            )
+                                                        },
+                                                        {
+                                                            key: 'item',
+                                                            label: 'Crop Item',
+                                                            render: item => (
+                                                                <div className="customer-order-crop">
+                                                                    <strong>{item?.cropType || 'Crop details unavailable'}</strong>
+                                                                    <span>{item?.quantity != null ? `${item.quantity} kg` : 'Quantity unavailable'} · {item?.priceInEth != null ? `${item.priceInEth} ETH` : 'Price unavailable'}</span>
+                                                                </div>
+                                                            )
+                                                        },
+                                                        {
+                                                            key: 'farmer',
+                                                            label: 'Farmer Details',
+                                                            render: farmer => (
+                                                                <div className="customer-order-farmer">
+                                                                    <strong>{farmer?.name || 'Farmer details unavailable'}</strong>
+                                                                    {farmer?.walletAddress && <AddressChip address={farmer.walletAddress} />}
+                                                                </div>
+                                                            )
+                                                        },
+                                                        {
+                                                            key: 'transactionHash',
+                                                            label: 'Escrow Tx Hash',
+                                                            render: hash => <TxHashBadge hash={hash} label="Purchase" />
+                                                        },
+                                                        {
+                                                            key: 'status',
+                                                            label: 'Escrow Status',
+                                                            render: status => (
+                                                                <div className="customer-order-status">
+                                                                    <StatusBadge status={status} />
+                                                                    <StepTracker currentStep={getStatusInfo(status).step} />
+                                                                </div>
+                                                            )
+                                                        }
+                                                    ]}
+                                                />
+                                            )}
+                                        </Panel>
+                                    )}
+
+                                    {activeTab === 'browse' && (
+                                        <section className="customer-browse-section">
+                                            <form className="customer-filter-bar" onSubmit={handleApplyFilters}>
+                                                <label className="customer-search-field">
+                                                    Search crops
+                                                    <input
+                                                        className="input-field"
+                                                        type="search"
+                                                        placeholder="Search by crop variety..."
+                                                        value={searchText}
+                                                        onChange={event => setSearchText(event.target.value)}
+                                                    />
+                                                </label>
+                                                <label className="customer-category-field">
+                                                    Category
+                                                    <select className="select-field" value={selectedCategory} onChange={event => setSelectedCategory(event.target.value)}>
+                                                        {CROP_CATEGORIES.map(category => <option key={category} value={category}>{category}</option>)}
+                                                    </select>
+                                                </label>
+                                                <button type="submit" className="btn-primary">Filter</button>
+                                            </form>
+
+                                            {filteredListings.length === 0 ? (
+                                                <EmptyState
+                                                    icon="🌾"
+                                                    title="No crops found"
+                                                    description="No listings match the current search and category."
+                                                    actionLabel="Clear filters"
+                                                    onAction={() => {
+                                                        setSearchText('');
+                                                        setSelectedCategory('All');
+                                                        setAppliedSearch('');
+                                                        setAppliedCategory('All');
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="crop-card-grid">
+                                                    {filteredListings.map(item => (
+                                                        <CropCard
+                                                            key={item._id}
+                                                            crop={item}
+                                                            action={(
+                                                                <div className="customer-crop-actions">
+                                                                    <button type="button" className="btn-secondary" onClick={() => addToCart(item)}>+ Queue</button>
+                                                                    <button type="button" className="btn-primary" onClick={() => handleCheckout(item)}>🔒 Buy Escrow</button>
+                                                                </div>
+                                                            )}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </section>
+                                    )}
+
+                                    {activeTab === 'queue' && (
+                                        <Panel title={`Transaction Queue (${cart.length})`}>
+                                            {cart.length === 0 ? (
+                                                <EmptyState
+                                                    icon="🛒"
+                                                    title="Queue is empty"
+                                                    description="You have not added any crops to your transaction queue yet."
+                                                    actionLabel="Browse harvest listings"
+                                                    onAction={() => setActiveTab('browse')}
+                                                />
+                                            ) : (
+                                                <div className="customer-queue-list">
+                                                    {cart.map(item => (
+                                                        <article className="customer-queue-item" key={item._id}>
+                                                            <div className="customer-queue-details">
+                                                                <strong>{item.cropType}</strong>
+                                                                <span>{item.priceInEth} ETH</span>
+                                                            </div>
+                                                            <label className="customer-queue-quantity">
+                                                                Quantity
+                                                                <input className="input-field" type="number" min="1" value={item.quantityOrdered} onChange={event => updateCartQuantity(item._id, event.target.value)} />
+                                                            </label>
+                                                            <div className="customer-queue-actions">
+                                                                <button type="button" className="btn-primary" onClick={() => handleCheckout(item)}>🔒 Buy Escrow</button>
+                                                                <button type="button" className="btn-secondary" onClick={() => removeFromCart(item._id)}>Remove</button>
+                                                            </div>
+                                                        </article>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </Panel>
+                                    )}
+
+                                    {activeTab === 'profile' && (
+                                        <Panel title="Customer Profile & Wallet">
+                                            <EmptyState
+                                                icon="👤"
+                                                title="Profile data is unavailable"
+                                                description="The current customer login response does not provide profile details, and this page has no supported profile endpoint."
+                                            />
+                                        </Panel>
+                                    )}
+                                </>
+                            )}
+                            sidebar={(
+                                <>
+                                    <Panel title="Wallet summary">
+                                        {user?.walletAddress ? (
+                                            <AddressChip address={user.walletAddress} />
+                                        ) : (
+                                            <p className="customer-sidebar-note">A wallet address is not included in the current customer login response.</p>
+                                        )}
+                                    </Panel>
+                                    <Panel title={`Transaction Queue (${cart.length})`}>
+                                        <p className="customer-sidebar-note">
+                                            {cart.length ? `${cart.length} crop${cart.length === 1 ? '' : 's'} queued for purchase.` : 'Your queue is empty.'}
+                                        </p>
+                                        <button type="button" className="btn-secondary" onClick={() => setActiveTab(cart.length ? 'queue' : 'browse')}>
+                                            {cart.length ? 'View Queue' : 'Browse Crops'}
+                                        </button>
+                                    </Panel>
+                                </>
+                            )}
+                        />
                     </div>
-                ) : (
-                    <form onSubmit={handleUpdateProfile}>
-                        <input type="text" value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} required />
-                        <input type="email" value={profile.email} onChange={e => setProfile({ ...profile, email: e.target.value })} required />
-                        <button type="submit">Save Changes</button>
-                        <button type="button" onClick={() => setIsEditing(false)}>Cancel</button>
-                    </form>
-                )}
-            </section>
-
-            {/* Browse Section */}
-            <section style={{ marginBottom: '30px' }}>
-                <h2>4. Available Agricultural Listings</h2>
-                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-                    {listings.length === 0 ? <p>No crops currently listed by farmers.</p> : listings.map(item => (
-                        <div key={item._id} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
-                            <h3>{item.cropType}</h3>
-                            <p>Quantity: {item.quantity} kg</p>
-                            <p>Price: <strong>{item.priceInEth} ETH</strong></p>
-                            <p>Farmer: {item.farmer?.name || 'Unknown'}</p>
-                            <button onClick={() => addToCart(item)}>Add to Transaction Queue</button>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Cart/Queue Management Section */}
-            <section style={{ marginBottom: '30px', background: '#f9f9f9', padding: '15px' }}>
-                <h2>5, 6, 7. Transaction Queue (Cart Management)</h2>
-                {cart.length === 0 ? <p>Queue is empty.</p> : cart.map(item => (
-                    <div key={item._id} style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '10px' }}>
-                        <span><strong>{item.cropType}</strong> ({item.priceInEth} ETH)</span>
-                        <div>
-                            <label>Qty Update: </label>
-                            <input type="number" min="1" value={item.quantityOrdered} onChange={e => updateCartQuantity(item._id, e.target.value)} style={{ width: '60px' }} />
-                        </div>
-                        <button onClick={() => handleCheckout(item)} style={{ background: 'green', color: '#fff' }}>8. Purchase via Escrow</button>
-                        <button onClick={() => removeFromCart(item._id)} style={{ background: 'red', color: '#fff' }}>Remove</button>
-                    </div>
-                ))}
-            </section>
-
-            {/* View Orders History */}
-            <section>
-                <h2>9. Verified Blockchain Orders History</h2>
-                {orders.length === 0 ? <p>No completed orders found.</p> : orders.map(order => (
-                    <div key={order._id} style={{ borderBottom: '1px solid #eee', padding: '10px 0' }}>
-                        <p>Order ID: {order._id} | Status: <strong>{order.status || 'Pending'}</strong></p>
-                        <p style={{ fontSize: '12px', color: '#666' }}>
-                            Tx Hash: <code style={{ background: '#eee', padding: '2px 4px' }}>{order.transactionHash}</code>
-                        </p>
-                    </div>
-                ))}
-            </section>
-        </div>
+                </Container>
+            </main>
+        </>
     );
 };
+
+function formatDate(value) {
+    if (!value) return 'Date unavailable';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleDateString();
+}
 
 export default CustomerDash;

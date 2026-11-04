@@ -1,5 +1,4 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import CustomerDash from './pages/CustomerDash';
 import FarmerDash from './pages/FarmerDash';
@@ -7,13 +6,16 @@ import AdminDash from './pages/AdminDash';
 
 import Login from './pages/login';
 import Register from './pages/register';
+import Landing from './pages/Landing';
+import Marketplace from './pages/Marketplace';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/marketplace" element={<Marketplace />} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

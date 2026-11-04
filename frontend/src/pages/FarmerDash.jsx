@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
+import Navbar from '../components/layout/Navbar';
+import Container from '../components/layout/Container';
+import DashboardLayout from '../components/layout/DashboardLayout';
+import Panel from '../components/layout/Panel';
+import MetricCard from '../components/MetricCard';
+import StatusLegendPanel from '../components/StatusLegendPanel';
+import StatusBadge from '../components/StatusBadge';
+import DataTable from '../components/common/DataTable';
+import EmptyState from '../components/common/EmptyState';
+import Tabs from '../components/common/Tabs';
 
 const FarmerDash = () => {
     // Dummy Farmer ID for testing (matches a MongoDB ObjectId format)
@@ -8,6 +18,7 @@ const FarmerDash = () => {
     const [cropType, setCropType] = useState('');
     const [quantity, setQuantity] = useState('');
     const [priceInEth, setPriceInEth] = useState('');
+    const [activeTab, setActiveTab] = useState('inventory');
 
     // Smart Contract config matching our local hardhat network deployment
     const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
@@ -87,52 +98,206 @@ const FarmerDash = () => {
         } catch (err) { console.error(err); }
     };
 
+    const availableListings = myItems.filter(item => item.status === 'Available');
+    const soldListings = myItems.filter(item => item.status === 'Sold');
+    const availableQuantity = availableListings.reduce(
+        (total, item) => total + (Number(item.quantity) || 0),
+        0
+    );
+
+    const tabs = [
+        { id: 'inventory', icon: '🌾', label: 'My Crop Inventory', count: myItems.length },
+        { id: 'orders', icon: '📦', label: 'Customer Orders & Escrow', count: '—' },
+        { id: 'analytics', icon: '📈', label: 'Revenue Analytics' },
+        { id: 'profile', icon: '👤', label: 'Farmer Profile' }
+    ];
+
     return (
-        <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-            <h1>AgriTradeChain Farmer Dashboard</h1>
-            <hr />
+        <>
+            <Navbar />
+            <main className="farmer-dashboard-page">
+                <Container>
+                    <div className="farmer-dashboard">
+                        <header className="farmer-dashboard-heading">
+                            <div>
+                                <h1>Farmer Dashboard &amp; Escrow</h1>
+                                <p>Track active harvest inventory, customer escrow orders, and confirmed settlements.</p>
+                            </div>
+                            <details className="harvest-listing-details" id="new-harvest">
+                                <summary className="btn-primary farmer-primary-action">🌽 List New Harvest</summary>
+                                <div className="harvest-form-panel">
+                                    <h2>List a New Crop on Blockchain</h2>
+                                    <form onSubmit={handleAddCrop} className="harvest-form">
+                                        <label>
+                                            Crop type
+                                            <input className="input-field" type="text" placeholder="e.g. Wheat, Rice, Corn" value={cropType} onChange={e => setCropType(e.target.value)} required />
+                                        </label>
+                                        <label>
+                                            Quantity (kg)
+                                            <input className="input-field" type="number" placeholder="Quantity in kg" value={quantity} onChange={e => setQuantity(e.target.value)} required />
+                                        </label>
+                                        <label>
+                                            Price (ETH)
+                                            <input className="input-field" type="number" step="0.01" placeholder="Price in Ether" value={priceInEth} onChange={e => setPriceInEth(e.target.value)} required />
+                                        </label>
+                                        <button type="submit" className="btn-primary farmer-primary-action">
+                                            Publish Listing
+                                        </button>
+                                    </form>
+                                </div>
+                            </details>
+                        </header>
 
-            {/* Crop Listing Creation Section */}
-            <section style={{ marginBottom: '30px', background: '#f0f7f4', padding: '15px', borderRadius: '5px' }}>
-                <h2>List a New Crop on Blockchain</h2>
-                <form onSubmit={handleAddCrop} style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '400px' }}>
-                    <div>
-                        <label>Crop Type: </label>
-                        <input type="text" placeholder="e.g. Wheat, Rice, Corn" value={cropType} onChange={e => setCropType(e.target.value)} required />
-                    </div>
-                    <div>
-                        <label>Quantity (kg): </label>
-                        <input type="number" placeholder="Quantity in kg" value={quantity} onChange={e => setQuantity(e.target.value)} required />
-                    </div>
-                    <div>
-                        <label>Price (ETH): </label>
-                        <input type="number" step="0.01" placeholder="Price in Ether" value={priceInEth} onChange={e => setPriceInEth(e.target.value)} required />
-                    </div>
-                    <button type="submit" style={{ padding: '10px', background: '#2e7d32', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
-                        Publish Listing
-                    </button>
-                </form>
-            </section>
-
-            {/* Inventory Tracker List Section */}
-            <section>
-                <h2>Your Current Listings Inventory</h2>
-                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-                    {myItems.length === 0 ? <p>You have no active crop listings right now.</p> : myItems.map(item => (
-                        <div key={item._id} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '5px', background: '#fff' }}>
-                            <h3>{item.cropType}</h3>
-                            <p>Quantity available: {item.quantity} kg</p>
-                            <p>Assigned Value: <strong>{item.priceInEth} ETH</strong></p>
-                            <p>Status: <span style={{ fontWeight: 'bold', color: item.status === 'Available' ? 'green' : 'orange' }}>{item.status}</span></p>
-                            <button onClick={() => handleRemoveCrop(item._id)} style={{ background: '#d32f2f', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer' }}>
-                                Delete Item
-                            </button>
+                        <div className="stat-card-grid farmer-stat-grid">
+                            <MetricCard
+                                icon="🌾"
+                                value={availableListings.length}
+                                title="Active Inventory"
+                                subtext={`${availableQuantity} kg in stock`}
+                                tone="safe"
+                            />
+                            <MetricCard
+                                icon="📦"
+                                value={soldListings.length}
+                                title="Sold Crops"
+                                subtext="From your crop listings"
+                            />
+                            <MetricCard
+                                icon="🔒"
+                                value="—"
+                                title="Pending Orders"
+                                subtext="Order data is not loaded on this page"
+                                tone="wait"
+                            />
+                            <MetricCard
+                                icon="✅"
+                                value="—"
+                                title="Delivered Orders"
+                                subtext="Order data is not loaded on this page"
+                            />
+                            <MetricCard
+                                icon="💰"
+                                value="—"
+                                unit="ETH"
+                                title="Settled Revenue"
+                                subtext="Settlement data is not loaded on this page"
+                            />
                         </div>
-                    ))}
-                </div>
-            </section>
-        </div>
+
+                        <Tabs
+                            items={tabs}
+                            value={activeTab}
+                            onChange={setActiveTab}
+                            ariaLabel="Farmer dashboard sections"
+                        />
+
+                        <DashboardLayout
+                            main={(
+                                <>
+                                    {activeTab === 'inventory' && (
+                                        <Panel
+                                            title={`Published Harvest Listings (${myItems.length})`}
+                                            action={(
+                                                <button type="button" className="btn-secondary" onClick={fetchMyItems}>
+                                                    Refresh Inventory
+                                                </button>
+                                            )}
+                                        >
+                                            {myItems.length === 0 ? (
+                                                <EmptyState
+                                                    icon="🌾"
+                                                    title="No crop listings yet"
+                                                    description="Listings returned for this farmer will appear here."
+                                                />
+                                            ) : (
+                                                <DataTable
+                                                    rows={myItems}
+                                                    minWidth="48rem"
+                                                    caption="Your current crop inventory"
+                                                    columns={[
+                                                        { key: 'cropType', label: 'Crop Variety' },
+                                                        { key: 'createdAt', label: 'Listed', render: value => formatDate(value) },
+                                                        { key: 'quantity', label: 'Quantity', render: value => `${value} kg` },
+                                                        { key: 'priceInEth', label: 'Price in ETH', render: value => `${value} ETH` },
+                                                        { key: 'status', label: 'Marketplace Status', render: value => <StatusBadge status={value} /> },
+                                                        {
+                                                            key: 'actions',
+                                                            label: 'Actions',
+                                                            render: (_, item) => (
+                                                                <button type="button" className="btn-secondary farmer-delete-action" onClick={() => handleRemoveCrop(item._id)}>
+                                                                    Delete
+                                                                </button>
+                                                            )
+                                                        }
+                                                    ]}
+                                                />
+                                            )}
+                                        </Panel>
+                                    )}
+
+                                    {activeTab === 'orders' && (
+                                        <Panel title="Incoming Customer Orders & Settlements">
+                                            <EmptyState
+                                                icon="📦"
+                                                title="Order information is unavailable"
+                                                description="This dashboard does not load farmer order records, so order and escrow details cannot be shown here."
+                                            />
+                                        </Panel>
+                                    )}
+
+                                    {activeTab === 'analytics' && (
+                                        <Panel title="Confirmed Settlement Analytics">
+                                            <div className="farmer-revenue-grid">
+                                                <section className="farmer-revenue-chart">
+                                                    <h2>Monthly Settled Revenue (ETH)</h2>
+                                                    <svg viewBox="0 0 360 180" role="img" aria-label="Empty monthly revenue chart">
+                                                        <path d="M36 16V148H344" fill="none" stroke="var(--line)" strokeWidth="2" />
+                                                        <path d="M36 48H344M36 82H344M36 116H344" fill="none" stroke="var(--line)" strokeWidth="1" />
+                                                    </svg>
+                                                    <p>Settlement data is not loaded by this dashboard. No revenue values are plotted.</p>
+                                                </section>
+                                                <section className="farmer-revenue-chart">
+                                                    <h2>Crop-Wise Sales Distribution</h2>
+                                                    <svg viewBox="0 0 180 180" role="img" aria-label="Empty crop sales distribution chart">
+                                                        <circle cx="90" cy="90" r="58" fill="none" stroke="var(--line)" strokeWidth="18" />
+                                                    </svg>
+                                                    <p>Sales distribution cannot be calculated without order records.</p>
+                                                </section>
+                                            </div>
+                                        </Panel>
+                                    )}
+
+                                    {activeTab === 'profile' && (
+                                        <Panel title="Farmer Profile">
+                                            <EmptyState
+                                                icon="🧑‍🌾"
+                                                title="Profile details are unavailable"
+                                                description="This dashboard does not load farmer profile details."
+                                            />
+                                        </Panel>
+                                    )}
+                                </>
+                            )}
+                            sidebar={(
+                                <>
+                                    <Panel title="Next payout">
+                                        <p className="farmer-sidebar-note">Payout details are not available from the current inventory data.</p>
+                                    </Panel>
+                                    <StatusLegendPanel />
+                                </>
+                            )}
+                        />
+                    </div>
+                </Container>
+            </main>
+        </>
     );
 };
+
+function formatDate(value) {
+    if (!value) return 'Date unavailable';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleDateString();
+}
 
 export default FarmerDash;

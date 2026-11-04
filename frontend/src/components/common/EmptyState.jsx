@@ -10,20 +10,20 @@ const EmptyState = ({
     return (
         <div style={{
             textAlign: 'center',
-            padding: '48px 24px',
+            padding: '3rem 1.5rem',
             background: 'var(--surface)',
             borderRadius: 'var(--radius-card)',
             border: '1px dashed var(--line)',
-            margin: '16px 0',
+            margin: '1rem 0',
             boxSizing: 'border-box'
         }}>
-            <div style={{ fontSize: '3.2rem', marginBottom: '14px' }}>
+            <div style={{ fontSize: '3.2rem', marginBottom: '0.875rem' }}>
                 {icon}
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--ink)', marginBottom: '8px' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--ink)', marginBottom: '0.5rem' }}>
                 {title}
             </h3>
-            <p style={{ color: 'var(--ink-2)', fontSize: '0.95rem', maxWidth: '440px', margin: '0 auto 24px', lineHeight: 1.5 }}>
+            <p style={{ color: 'var(--ink-2)', fontSize: '1rem', maxWidth: '27.5rem', margin: '0 auto 1.5rem', lineHeight: 1.5 }}>
                 {description}
             </p>
             {actionLabel && onAction && (

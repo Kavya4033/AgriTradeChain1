@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import ThemeToggle from '../components/ThemeToggle';
 
 function Register() {
     const [searchParams] = useSearchParams();
@@ -11,6 +12,8 @@ function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [walletAddress, setWalletAddress] = useState('');
     const [location, setLocation] = useState('');
     const [error, setError] = useState('');
@@ -78,143 +81,90 @@ function Register() {
         }
     };
 
-    const inputStyle = {
-        width: '100%',
-        padding: '10px',
-        margin: '8px 0 15px',
-        boxSizing: 'border-box',
-        border: '1px solid #ccc',
-        borderRadius: '5px'
-    };
-
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            background: '#f0f4f0',
-            padding: '20px'
-        }}>
-            <div style={{
-                width: '380px',
-                padding: '30px',
-                background: 'white',
-                borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-            }}>
-                <h2 style={{ textAlign: 'center', color: '#287a35' }}>
-                    AgriTradeChain
-                </h2>
+        <main className="auth-page">
+            <div className="auth-theme-toggle"><ThemeToggle /></div>
+            <section className="auth-card">
+                <div className="auth-brand">
+                    <span className="auth-brand-mark" aria-hidden="true">🌾</span>
+                    <span className="auth-brand-copy">
+                        <span className="auth-wordmark">AgriTrade<span>Chain</span></span>
+                        <span className="auth-caption">DECENTRALIZED ESCROW</span>
+                    </span>
+                </div>
+                <h1 className="auth-title">Create account</h1>
 
-                <h3 style={{ textAlign: 'center' }}>Create Account</h3>
+                <form className="auth-form" onSubmit={handleRegister}>
+                    <fieldset className="auth-role-fieldset">
+                        <legend>Register as</legend>
+                        <div className="auth-role-choice">
+                            {[
+                                { value: 'Farmer', icon: '🧑‍🌾' },
+                                { value: 'Customer', icon: '🛒' }
+                            ].map(option => (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    className={`auth-role-option${role === option.value ? ' active' : ''}`}
+                                    aria-pressed={role === option.value}
+                                    onClick={() => setRole(option.value)}
+                                >
+                                    <span aria-hidden="true">{option.icon}</span>
+                                    <span>{option.value}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </fieldset>
 
-                <form onSubmit={handleRegister}>
-                    <label>Register As</label>
+                    <label className="auth-field" htmlFor="register-name">
+                        Full name
+                        <input id="register-name" className="input-field" type="text" autoComplete="name" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} required />
+                    </label>
 
-                    <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        style={inputStyle}
-                    >
-                        <option value="Farmer">Farmer</option>
-                        <option value="Customer">Customer</option>
-                    </select>
+                    <label className="auth-field" htmlFor="register-email">
+                        Email address
+                        <input id="register-email" className="input-field" type="email" autoComplete="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required />
+                    </label>
 
-                    <label>Full Name</label>
-                    <input
-                        type="text"
-                        placeholder="Enter your name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        style={inputStyle}
-                        required
-                    />
+                    <div className="auth-field">
+                        <label htmlFor="register-password">Password</label>
+                        <span className="auth-password-control">
+                            <input id="register-password" className="input-field" type={showPassword ? 'text' : 'password'} autoComplete="new-password" placeholder="Create password" value={password} onChange={e => setPassword(e.target.value)} required />
+                            <button type="button" className="auth-reveal-button" aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? 'Hide' : 'Show'}</button>
+                        </span>
+                    </div>
 
-                    <label>Email</label>
-                    <input
-                        type="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        style={inputStyle}
-                        required
-                    />
+                    <div className="auth-field">
+                        <label htmlFor="register-confirm-password">Confirm password</label>
+                        <span className="auth-password-control">
+                            <input id="register-confirm-password" className="input-field" type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" placeholder="Confirm password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
+                            <button type="button" className="auth-reveal-button" aria-pressed={showConfirmPassword} onClick={() => setShowConfirmPassword(value => !value)}>{showConfirmPassword ? 'Hide' : 'Show'}</button>
+                        </span>
+                    </div>
 
-                    <label>Password</label>
-                    <input
-                        type="password"
-                        placeholder="Create password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        style={inputStyle}
-                        required
-                    />
-
-                    <label>Confirm Password</label>
-                    <input
-                        type="password"
-                        placeholder="Confirm password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        style={inputStyle}
-                        required
-                    />
-
-                    <label>MetaMask Wallet Address</label>
-                    <input
-                        type="text"
-                        placeholder="Enter wallet address"
-                        value={walletAddress}
-                        onChange={(e) => setWalletAddress(e.target.value)}
-                        style={inputStyle}
-                        required
-                    />
+                    <label className="auth-field" htmlFor="register-wallet">
+                        MetaMask wallet address
+                        <input id="register-wallet" className="input-field" type="text" autoComplete="off" placeholder="Enter your wallet address" value={walletAddress} onChange={e => setWalletAddress(e.target.value)} required />
+                    </label>
 
                     {role === 'Farmer' && (
-                        <>
-                            <label>Farm Location</label>
-                            <input
-                                type="text"
-                                placeholder="Enter farm location"
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                                style={inputStyle}
-                                required
-                            />
-                        </>
+                        <label className="auth-field" htmlFor="register-location">
+                            Farm location
+                            <input id="register-location" className="input-field" type="text" autoComplete="address-level2" placeholder="Enter farm location" value={location} onChange={e => setLocation(e.target.value)} required />
+                        </label>
                     )}
 
-                    {error && (
-                        <p style={{ color: 'red' }}>{error}</p>
-                    )}
+                    {error && <p className="auth-error" role="alert">{error}</p>}
+                    {message && <p className="auth-success" role="status">{message}</p>}
 
-                    {message && (
-                        <p style={{ color: 'green' }}>{message}</p>
-                    )}
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            background: '#287a35',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '5px',
-                            cursor: 'pointer'
-                        }}
-                    >
+                    <button type="submit" className="btn-primary auth-submit" disabled={loading}>
                         {loading ? 'Registering...' : 'Register'}
                     </button>
                 </form>
 
-                <p style={{ textAlign: 'center', marginTop: '20px' }}>
-                    Already have an account? <Link to="/login">Login</Link>
-                </p>
-            </div>
-        </div>
+                <p className="auth-footer">Already have an account? <Link to="/login">Login</Link></p>
+            </section>
+        </main>
     );
 }
 

@@ -14,7 +14,7 @@ const DashboardLayout = ({ main, sidebar }) => {
             <style>{`
                 .dashboard-grid-layout {
                     display: grid;
-                    grid-template-columns: minmax(0, 1fr) 380px;
+                    grid-template-columns: minmax(0, 1fr) 360px;
                     gap: 24px;
                     align-items: start;
                     width: 100%;
@@ -27,7 +27,7 @@ const DashboardLayout = ({ main, sidebar }) => {
                     gap: 24px;
                 }
                 .dashboard-sidebar-area {
-                    position: sticky;
+                    position: static;
                     top: calc(72px + 24px);
                     display: flex;
                     flex-direction: column;
@@ -35,6 +35,11 @@ const DashboardLayout = ({ main, sidebar }) => {
                     max-height: calc(100vh - 110px);
                     overflow-y: auto;
                     scrollbar-width: thin;
+                }
+                @media (min-width: 1100px) {
+                    .dashboard-sidebar-area {
+                        position: sticky;
+                    }
                 }
                 @media (max-width: 960px) {
                     .dashboard-grid-layout {

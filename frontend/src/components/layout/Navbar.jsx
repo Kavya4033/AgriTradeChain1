@@ -72,221 +72,89 @@ const Navbar = () => {
     };
 
     return (
-        <header
-            style={{
-                position: 'sticky',
-                top: 0,
-                zIndex: 900,
-                height: '72px',
-                paddingTop: 'env(safe-area-inset-top, 0px)',
-                background: 'var(--surface)',
-                borderBottom: '1px solid var(--line)',
-                boxShadow: 'var(--shadow)',
-                display: 'flex',
-                alignItems: 'center'
-            }}
-        >
-            <Container style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
-                {/* 1. Logo & Brand */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <Link
-                        to="/"
-                        style={{
-                            textDecoration: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px'
-                        }}
-                    >
-                        <div style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: 'var(--radius-control)',
-                            background: 'var(--brand)',
-                            color: 'var(--brand-contrast)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '1.25rem',
-                            fontWeight: '800'
-                        }}>
-                            🌾
-                        </div>
-                        <span style={{
-                            fontSize: '1.25rem',
-                            fontWeight: '800',
-                            color: 'var(--ink)',
-                            letterSpacing: '-0.02em'
-                        }}>
-                            AgriTrade<span style={{ color: 'var(--accent)' }}>Chain</span>
-                        </span>
-                    </Link>
+        <header className="site-navbar">
+            <Container className="navbar-inner">
+                <Link to="/" className="navbar-brand">
+                    <span className="navbar-brand-mark" aria-hidden="true">🌾</span>
+                    <span className="navbar-brand-copy">
+                        <span className="navbar-wordmark">AgriTrade<span>Chain</span></span>
+                        <span className="navbar-caption">DECENTRALIZED ESCROW</span>
+                    </span>
+                </Link>
 
-                    {/* 2. Marketplace Link */}
-                    <Link
-                        to="/marketplace"
-                        className="nav-link"
-                        style={{
-                            color: 'var(--ink-2)',
-                            textDecoration: 'none',
-                            fontWeight: '700',
-                            fontSize: '0.95rem',
-                            padding: '8px 12px',
-                            borderRadius: 'var(--radius-control)',
-                            transition: 'color 0.15s'
-                        }}
-                    >
-                        Marketplace
-                    </Link>
+                <details className="navbar-menu">
+                    <summary className="navbar-menu-trigger" aria-label="Open navigation menu">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                            <path d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <span>Menu</span>
+                    </summary>
 
-                    {/* 3. Portal Badge (if authenticated) */}
-                    {isAuthenticated && user?.role && (
-                        <Link
-                            to={getDashboardPath()}
-                            style={{
-                                textDecoration: 'none',
-                                background: 'var(--brand-subtle)',
-                                color: 'var(--brand)',
-                                border: '1px solid var(--brand)',
-                                padding: '4px 12px',
-                                borderRadius: 'var(--radius-pill)',
-                                fontSize: '0.9rem',
-                                fontWeight: '700',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                            }}
-                        >
-                            <span>{user.role}</span>
-                        </Link>
-                    )}
-                </div>
+                    <div className="navbar-menu-content">
+                        <nav className="navbar-links" aria-label="Main navigation">
+                            <Link to="/marketplace" className="navbar-link">Marketplace</Link>
+                            {isAuthenticated && user?.role && (
+                                <Link to={getDashboardPath()} className="navbar-portal-badge">
+                                    {user.role} Portal
+                                </Link>
+                            )}
+                        </nav>
 
-                {/* Right controls: ThemeToggle | wallet chip | notifications | user | logout */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {/* 4. ThemeToggle (always visible, placed immediately to the left of the wallet chip) */}
-                    <ThemeToggle />
-
-                    {/* 5. Wallet Chip */}
-                    {walletAddress ? (
-                        <div
-                            style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                minHeight: '44px',
-                                padding: '0 14px',
-                                borderRadius: 'var(--radius-control)',
-                                background: 'var(--surface-2)',
-                                border: '1px solid var(--line)',
-                                color: 'var(--ink)',
-                                fontSize: '0.95rem',
-                                fontWeight: '600',
-                                fontFamily: 'var(--font-mono)'
-                            }}
-                            title={`Connected wallet: ${walletAddress}`}
-                        >
-                            <span style={{
-                                width: '10px',
-                                height: '10px',
-                                borderRadius: '50%',
-                                background: 'var(--done)',
-                                flexShrink: 0
-                            }} />
-                            <span className="wallet-chip-text">
-                                {shortenHash(walletAddress, 5, 4)}
-                            </span>
-                        </div>
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={handleConnectWallet}
-                            disabled={connecting}
-                            className="btn-secondary"
-                            style={{ minHeight: '44px', padding: '0 14px', fontSize: '0.92rem' }}
-                        >
-                            🦊 <span className="wallet-chip-text">{connecting ? 'Connecting...' : 'Connect wallet'}</span>
-                        </button>
-                    )}
-
-                    {/* 6. Notifications */}
-                    {isAuthenticated && <NotificationDropdown />}
-
-                    {/* 7. User & 8. Logout */}
-                    {isAuthenticated ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '4px 10px',
-                                    borderRadius: 'var(--radius-control)',
-                                    background: 'var(--surface-2)'
-                                }}
-                                className="user-profile-badge"
-                            >
-                                <div style={{
-                                    width: '32px',
-                                    height: '32px',
-                                    borderRadius: '50%',
-                                    background: 'var(--brand)',
-                                    color: 'var(--brand-contrast)',
-                                    fontWeight: '800',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '0.9rem'
-                                }}>
-                                    {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                        <div className="navbar-controls">
+                            {walletAddress ? (
+                                <div className="wallet-chip" title={`Connected wallet: ${walletAddress}`}>
+                                    <span className="wallet-status-dot" aria-hidden="true" />
+                                    <span className="wallet-chip-text">{shortenHash(walletAddress, 5, 4)}</span>
                                 </div>
-                                <span style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--ink)' }}>
-                                    {user.name || user.email?.split('@')[0]}
-                                </span>
-                            </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={handleConnectWallet}
+                                    disabled={connecting}
+                                    className="btn-secondary wallet-connect-button"
+                                >
+                                    🦊 {connecting ? 'Connecting...' : 'Connect wallet'}
+                                </button>
+                            )}
 
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    logout();
-                                    navigate('/login');
-                                }}
-                                className="btn-secondary"
-                                style={{
-                                    minHeight: '44px',
-                                    padding: '0 14px',
-                                    color: 'var(--alert)',
-                                    borderColor: 'var(--line)',
-                                    fontSize: '0.92rem'
-                                }}
-                            >
-                                Logout
-                            </button>
+                            {isAuthenticated && <NotificationDropdown />}
+
+                            {isAuthenticated ? (
+                                <div className="navbar-account-controls">
+                                    <div className="navbar-user">
+                                        <span className="navbar-avatar" aria-hidden="true">
+                                            {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                                        </span>
+                                        <span className="navbar-user-copy">
+                                            <strong>{user.name || user.email?.split('@')[0]}</strong>
+                                            <span>{user.role}</span>
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            logout();
+                                            navigate('/login');
+                                        }}
+                                        className="btn-secondary navbar-logout"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="navbar-auth-links">
+                                    <Link to="/login" className="btn-secondary">Sign in</Link>
+                                    <Link to="/register" className="btn-primary">Register</Link>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Link to="/login" className="btn-secondary" style={{ minHeight: '44px', padding: '0 16px', textDecoration: 'none' }}>
-                                Sign in
-                            </Link>
-                            <Link to="/register" className="btn-primary" style={{ minHeight: '44px', padding: '0 16px', textDecoration: 'none' }}>
-                                Register
-                            </Link>
-                        </div>
-                    )}
+                    </div>
+                </details>
+
+                <div className="navbar-theme-control">
+                    <ThemeToggle />
                 </div>
             </Container>
-
-            {/* Responsive styles for wallet chip & user badge */}
-            <style>{`
-                @media (max-width: 640px) {
-                    .wallet-chip-text {
-                        display: none;
-                    }
-                    .user-profile-badge span {
-                        display: none;
-                    }
-                }
-            `}</style>
         </header>
     );
 };

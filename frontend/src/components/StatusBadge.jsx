@@ -6,22 +6,24 @@ export const StatusBadge = ({ status, showText = true, size = 'normal' }) => {
 
     return (
         <span
+            aria-label={`${info.icon} ${info.label}`}
             style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
-                padding: size === 'large' ? '6px 14px' : '4px 10px',
+                gap: '0.375rem',
+                minHeight: size === 'large' ? '2.5rem' : '2.25rem',
+                padding: size === 'large' ? '0.375rem 0.875rem' : '0.25rem 0.625rem',
                 borderRadius: 'var(--radius-pill)',
                 background: info.bgVar,
                 color: info.colorVar,
                 border: `1px solid ${info.colorVar}`,
-                fontSize: size === 'large' ? '0.95rem' : '0.88rem',
+                fontSize: size === 'large' ? '1rem' : '0.9rem',
                 fontWeight: '700',
                 lineHeight: 1.2,
                 whiteSpace: 'nowrap'
             }}
         >
-            <span role="img" aria-hidden="true" style={{ fontSize: size === 'large' ? '1.05rem' : '0.95rem' }}>
+            <span aria-hidden="true" style={{ fontSize: size === 'large' ? '1.125rem' : '1rem' }}>
                 {info.icon}
             </span>
             {showText && <span>{info.label}</span>}
@@ -38,31 +40,17 @@ export const StepTracker = ({ currentStep = 1 }) => {
     ];
 
     return (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }} title={`Step ${currentStep} of 3`}>
-            {steps.map((st, i) => {
-                const isDoneOrCurrent = currentStep >= st.num;
+        <div className="order-tracker" role="img" aria-label={`Escrow progress: step ${currentStep} of 3`} title={`Step ${currentStep} of 3`}>
+            {steps.map((step, index) => {
+                const isDoneOrCurrent = currentStep >= step.num;
                 return (
-                    <React.Fragment key={st.num}>
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                padding: '3px 8px',
-                                borderRadius: 'var(--radius-pill)',
-                                background: isDoneOrCurrent ? 'var(--surface-2)' : 'transparent',
-                                border: `1px solid ${isDoneOrCurrent ? 'var(--line)' : 'transparent'}`,
-                                opacity: isDoneOrCurrent ? 1 : 0.35,
-                                fontSize: '0.88rem',
-                                fontWeight: isDoneOrCurrent ? '700' : '500',
-                                color: isDoneOrCurrent ? 'var(--ink)' : 'var(--ink-3)'
-                            }}
-                        >
-                            <span>{st.icon}</span>
-                            <span>{st.label}</span>
-                        </div>
-                        {i < steps.length - 1 && (
-                            <span style={{ color: 'var(--line)', fontSize: '0.85rem' }}>→</span>
+                    <React.Fragment key={step.num}>
+                        <span className={`order-tracker-step${isDoneOrCurrent ? ' is-current' : ''}`}>
+                            <span aria-hidden="true">{step.icon}</span>
+                            <span>{step.label}</span>
+                        </span>
+                        {index < steps.length - 1 && (
+                            <span className="order-tracker-arrow" aria-hidden="true">→</span>
                         )}
                     </React.Fragment>
                 );

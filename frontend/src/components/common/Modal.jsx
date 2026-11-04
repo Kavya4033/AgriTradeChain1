@@ -1,19 +1,49 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = '550px' }) => {
+const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = '34rem' }) => {
+    const dialogRef = useRef(null);
+
     useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') onClose();
+        if (!isOpen) return undefined;
+
+        const previousFocus = document.activeElement;
+        const previousOverflow = document.body.style.overflow;
+        const dialog = dialogRef.current;
+        const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        document.body.style.overflow = 'hidden';
+
+        const getFocusable = () => Array.from(dialog?.querySelectorAll(focusableSelector) || []);
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                onClose();
+                return;
+            }
+            if (event.key !== 'Tab') return;
+
+            const focusable = getFocusable();
+            if (focusable.length === 0) {
+                event.preventDefault();
+                dialog?.focus();
+                return;
+            }
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
         };
 
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-            window.addEventListener('keydown', handleKeyDown);
-        }
-
+        (getFocusable()[0] || dialog)?.focus();
+        window.addEventListener('keydown', handleKeyDown);
         return () => {
-            document.body.style.overflow = 'auto';
+            document.body.style.overflow = previousOverflow;
             window.removeEventListener('keydown', handleKeyDown);
+            if (previousFocus instanceof HTMLElement) previousFocus.focus();
         };
     }, [isOpen, onClose]);
 
@@ -25,13 +55,13 @@ const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = '550px' 
             style={{
                 position: 'fixed',
                 inset: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                backdropFilter: 'blur(3px)',
+                backgroundColor: 'color-mix(in srgb, var(--ink) 55%, transparent)',
+                backdropFilter: 'blur(0.1875rem)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 zIndex: 1000,
-                padding: '16px',
+                padding: '1rem',
                 animation: 'fadeIn 0.15s ease-out',
                 boxSizing: 'border-box'
             }}
@@ -40,6 +70,9 @@ const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = '550px' 
                 onClick={(e) => e.stopPropagation()}
                 role="dialog"
                 aria-modal="true"
+                aria-label={title}
+                tabIndex={-1}
+                ref={dialogRef}
                 style={{
                     background: 'var(--surface)',
                     borderRadius: 'var(--radius-card)',
@@ -56,19 +89,19 @@ const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = '550px' 
             >
                 {/* Modal Header */}
                 <div style={{
-                    padding: '20px 24px',
+                    padding: '1.25rem 1.5rem',
                     borderBottom: '1px solid var(--line)',
                     display: 'flex',
                     alignItems: 'flex-start',
                     justifyContent: 'space-between',
-                    gap: '12px'
+                    gap: '0.75rem'
                 }}>
                     <div>
                         <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--ink)', margin: 0 }}>
                             {title}
                         </h3>
                         {subtitle && (
-                            <p style={{ fontSize: '0.95rem', color: 'var(--ink-2)', marginTop: '4px', margin: 0 }}>
+                            <p style={{ fontSize: '0.95rem', color: 'var(--ink-2)', marginTop: '0.25rem', margin: 0 }}>
                                 {subtitle}
                             </p>
                         )}
@@ -80,13 +113,13 @@ const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = '550px' 
                         style={{
                             background: 'var(--surface-2)',
                             border: '1px solid var(--line)',
-                            width: '36px',
-                            height: '36px',
+                            width: '2.75rem',
+                            height: '2.75rem',
                             borderRadius: '50%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: '18px',
+                            fontSize: '1.125rem',
                             color: 'var(--ink)',
                             cursor: 'pointer'
                         }}
@@ -96,7 +129,7 @@ const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = '550px' 
                 </div>
 
                 {/* Modal Body */}
-                <div style={{ padding: '24px' }}>
+                <div style={{ padding: '1.5rem' }}>
                     {children}
                 </div>
             </div>
